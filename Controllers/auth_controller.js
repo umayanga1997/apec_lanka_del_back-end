@@ -9,9 +9,17 @@ const {
 } = require('uuid');
 // const fetch = require('node-fetch');
 
-const userMobile = async function (req, res, next) {
+const userMobileOTP = async function (req, res, next) {
     //set sent parameter data
-    const phone_no = req.params.mobile_no;
+    const reg = new RegExp('[^0]');
+    const regResult = reg.exec(req.params.mobile_no);
+    var phone_no = "";
+    if (regResult.index == 0) {
+        phone_no = "0" + req.params.mobile_no;
+    } else {
+        phone_no = regResult.input;
+    }
+
     //genarate otp number
     var otp = (Math.floor(Math.random() * 10000) + 10000).toString().substring(1);
     //make message
@@ -19,35 +27,39 @@ const userMobile = async function (req, res, next) {
 
     //format date time
     var date = dateFormat(new Date(), "yyyy-mm-dd h:MM:ss");
-
-    //insert otp code and more details to database
-    const response = await pool.query("INSERT INTO otp_s(phone_no, otp_code, date_time)VALUES($1,$2,$3)", [phone_no, otp, date]);
     try {
-        if (res.status(200)) {
-            //sent otp code to currect mobile number
-            // Make a request for a user with a given ID
-            axios.get(`http://textit.biz/sendmsg/index.php?id=${process.env.OTP_ID}&pw=${process.env.OTP_PASSWORD}&to=${phone_no}&text=${message}&from=Apec.lk Delivery`)
-                .then(function (response) {
-                    // handle success
-                    // console.log(response);
-                })
-                .catch(function (error) {
-                    // handle error
-                    console.log(error);
-                })
-                .then(function () {
-                    // always executed
-                });
+        //update otp
+        const updateResponse = await pool.query("UPDATE otp_s SET verified=$1 WHERE phone_no=$2", [true, phone_no]);
 
-            res.json({
-                done: true,
-                message: "Data Inserted successfully",
-            });
-        } else {
-            res.json({
-                done: false,
-                message: "Has some issue(s) with status, Try again.",
-            })
+        if (res.status(200)) {
+            //insert otp code and more details to database
+            const response = await pool.query("INSERT INTO otp_s(phone_no, otp_code, date_time)VALUES($1,$2,$3)", [phone_no, otp, date]);
+
+            if (res.status(200)) {
+                //sent otp code to currect mobile number
+                // Make a request for a user with a given ID
+                axios.get(`http://textit.biz/sendmsg/index.php?id=${process.env.OTP_ID}&pw=${process.env.OTP_PASSWORD}&to=${phone_no}&text=${message}&from=Apec.lk Delivery`)
+                    .then(function (response) {
+
+                        res.json({
+                            done: true,
+                            message: "OTP Request has been accepted.",
+                        });
+                    })
+                    .catch(function (error) {
+                        res.json({
+                            done: true,
+                            message: "Can't send otp, Has some issue(s) with another, Try again.",
+                        });
+                    });
+
+            } else {
+                res.json({
+                    done: false,
+                    message: "Has some issue(s) with status, Try again.",
+                })
+
+            }
         }
 
     } catch (error) {
@@ -59,38 +71,57 @@ const userMobile = async function (req, res, next) {
 }
 
 const otpVerification = async function (req, res, next) {
+    //set sent parameter data
     const getOtp = req.body.otp;
-    const getMobileNo = req.body.mobile_no;
+    const reg = new RegExp('[^0]');
+    const regResult = reg.exec(req.body.mobile_no);
+    var getMobileNo = "";
+    if (regResult.index == 0) {
+        getMobileNo = "0" + req.body.mobile_no;
+    } else {
+        getMobileNo = regResult.input;
+    }
 
-    const response = await pool.query("SELECT * FROM otp_s WHERE otp_code=$1  AND phone_no=$2", [getOtp, getMobileNo]);
+    const response = await pool.query("SELECT * FROM otp_s WHERE otp_code=$1  AND phone_no=$2 AND NOT verified", [getOtp, getMobileNo]);
     try {
         if (res.status(200)) {
             if (response.rowCount != 0 && response.rowCount != null) {
-                //generate token for mobile number
-                const token = jwt.sign({
-                    _mobile_no: getMobileNo,
-                }, process.env.TOKEN_SECRET, );
-
-                //format date time
-                var date = dateFormat(new Date(), "yyyy-mm-dd h:MM:ss");
-                //store token in database
-                const tokenResponse = await pool.query("INSERT INTO mobile_no_token(token, created_date)VALUES($1, $2)", [token, date]);
+                //update otp
+                const updateResponse = await pool.query("UPDATE otp_s SET verified=$1 WHERE otp_code=$2 AND phone_no=$3", [true, getOtp, getMobileNo]);
 
                 if (res.status(200)) {
-                    if (tokenResponse.rowCount != 0 && tokenResponse.rowCount != null) {
-                        //set token to header
-                        res.header("mobile-token", token);
-                        //set responce to body
-                        res.json({
-                            done: true,
-                            message: "Otp has been veryfied",
-                            data: [],
-                        });
+                    //generate token for mobile number
+                    const token = jwt.sign({
+                        _mobile_no: getMobileNo,
+                    }, process.env.TOKEN_SECRET, );
+
+                    //format date time
+                    var date = dateFormat(new Date(), "yyyy-mm-dd h:MM:ss");
+                    //store token in database
+                    const tokenResponse = await pool.query("INSERT INTO mobile_no_token(token, created_date)VALUES($1, $2)", [token, date]);
+
+                    if (res.status(200)) {
+                        if (tokenResponse.rowCount != 0 && tokenResponse.rowCount != null) {
+                            //set token to header
+                            res.header("mobile-token", token);
+                            //set responce to body
+                            res.json({
+                                done: true,
+                                message: "Otp has been veryfied",
+                                data: [],
+                            });
+                        } else {
+                            res.json({
+                                done: false,
+                                message: "Otp not veryfied",
+                                data: [],
+                            })
+                        }
                     } else {
                         res.json({
                             done: false,
-                            message: "Otp not veryfied",
-                            data: [],
+                            message: "Has some issue(s) with status, Try again.",
+                            data: []
                         })
                     }
                 } else {
@@ -240,7 +271,7 @@ const userLogin = async function (req, res, next) {
 }
 
 module.exports = {
-    userMobile,
+    userMobileOTP,
     otpVerification,
     userAuth,
     userLogin,
