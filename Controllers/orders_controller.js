@@ -9,7 +9,7 @@ var dateFormat = require("dateformat");
 const getOrders = async function (req, res, next) {
     var orders = [];
     // const userId = req.userVerify._id;
-    const responseOrder = await pool.query("SELECT * FROM orders");
+    const responseOrder = await pool.query("SELECT * FROM orders order by order_count desc");
 
     try {
         if (res.status(200)) {
@@ -24,6 +24,7 @@ const getOrders = async function (req, res, next) {
                                 items.push(responseItem.rows[countItem]);
                             }
                             orders.push({
+                                order_no: responseOrder.rows[count]['order_count'],
                                 order_id: orderID,
                                 user_id: responseOrder.rows[count]['user_id'],
                                 user_mobile: responseOrder.rows[count]['user_mobile'],
@@ -88,7 +89,7 @@ const getOrderByID = async function (req, res, next) {
     const orderID = req.params.or_id;
     var orders = [];
     // const userId = req.userVerify._id;
-    const responseOrder = await pool.query("SELECT * FROM orders WHERE order_id= $1 ", [orderID]);
+    const responseOrder = await pool.query("SELECT * FROM orders WHERE order_id= $1 order by order_count desc", [orderID]);
 
     try {
         if (res.status(200)) {
@@ -103,6 +104,7 @@ const getOrderByID = async function (req, res, next) {
                                 items.push(responseItem.rows[countItem]);
                             }
                             orders.push({
+                                order_no: responseOrder.rows[count]['order_count'],
                                 order_id: orderID,
                                 user_id: responseOrder.rows[count]['user_id'],
                                 user_mobile: responseOrder.rows[count]['user_mobile'],
@@ -162,11 +164,11 @@ const getOrderByID = async function (req, res, next) {
     }
 }
 const getOrdersByUserID = async function (req, res, next) {
-    const userId = req.userVerify._id;
+    const userId = req.userVerify._id.user_id;
     
     var orders = [];
     // const userId = req.userVerify._id;
-    const responseOrder = await pool.query("SELECT * FROM orders WHERE user_id= $1", [userId]);
+    const responseOrder = await pool.query("SELECT * FROM orders WHERE user_id= $1 order by order_count desc", [userId]);
 
     try {
 
@@ -182,6 +184,7 @@ const getOrdersByUserID = async function (req, res, next) {
                                 items.push(responseItem.rows[countItem]);
                             }
                             orders.push({
+                                order_no: responseOrder.rows[count]['order_count'],
                                 order_id: orderID,
                                 user_id: responseOrder.rows[count]['user_id'],
                                 user_mobile: responseOrder.rows[count]['user_mobile'],
@@ -201,6 +204,7 @@ const getOrdersByUserID = async function (req, res, next) {
                                 items: items,
                             }, )
                         }else{
+                           
                             console.log(`No items found in ${orderID}`);
                         }
                     } else {
@@ -265,8 +269,8 @@ const postOrder = async function (req, res, next) {
     try {
         if (res.status(200)) {
             items.forEach(async element => {
-                const responseItems = await pool.query("INSERT INTO ordered_items(item_id, item_name, unit_qty, unit, price_buy, price_sale, price_sale_with_discount, max_qty, partner_id, partner_name, image_url, order_id)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
-                    [element.item_id, element.item_name, element.unit_qty, element.unit, element.price_buy, element.price_sale, element.price_sale_with_discount, element.max_qty, element.partner_id, element.partner_name, element.image_url, orderID]);
+                const responseItems = await pool.query("INSERT INTO ordered_items(item_id, item_name, unit_qty, unit, price_buy, price_sale, price_sale_with_discount, ordered_qty, partner_id, partner_name, image_url, order_id)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+                    [element.item_id, element.item_name, element.unit_qty, element.unit, element.price_buy, element.price_sale, element.price_sale_with_discount, element.ordered_qty, element.partner_id, element.partner_name, element.image_url, orderID]);
             });
             if (res.status(200)) {
                 res.json({
