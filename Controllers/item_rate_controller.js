@@ -56,22 +56,32 @@ const postRate = async function (req, res, next) {
     const response = await pool.query("INSERT INTO item_rates(item_id, rate_value, date_time)VALUES($1,$2, $3)", [ itemID, value, date]);
     try {
         if (res.status(200)) {
-            res.json({
-                done: true,
-                message: "Data Inserted successfully",
-            })
+            // res.json({
+            //     done: true,
+            //     message: "Data Inserted successfully",
+            // })
+            // res.write("Data Inserted successfully");
+            req.done = true;
+            next();
         } else {
-            res.json({
-                done: false,
-                message: "Has some issue(s) with status, Try again.",
-            })
+            req.done = false;
+            next();
+            // res.json({
+            //     done: false,
+            //     message: "Has some issue(s) with status, Try again.",
+            // })
         }
+        
     } catch (error) {
-        res.json({
-            done: false,
-            message: "Has some issue(s) with another, Try again.",
-        });
+        req.done = false;
+        next();
+        
+        // res.json({
+        //     done: false,
+        //     message: "Has some issue(s) with another, Try again.",
+        // });
     }
+    
 }
 module.exports = {
     getRate,

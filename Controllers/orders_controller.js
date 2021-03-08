@@ -5,6 +5,7 @@ const {
     v4: uuidv4
 } = require('uuid');
 var dateFormat = require("dateformat");
+const {postRate } = require('./item_rate_controller');
 
 const getOrders = async function (req, res, next) {
     var orders = [];
@@ -43,7 +44,7 @@ const getOrders = async function (req, res, next) {
                                 status: responseOrder.rows[count]['status'],
                                 items: items,
                             }, )
-                        }else{
+                        } else {
                             console.log(`No items found in ${orderID}`);
                         }
                     } else {
@@ -57,7 +58,7 @@ const getOrders = async function (req, res, next) {
                 }
                 res.send({
                     done: true,
-                    message: "Done",
+                    message: "Data not found.",
                     data: orders
                 });
             } else {
@@ -123,7 +124,7 @@ const getOrderByID = async function (req, res, next) {
                                 status: responseOrder.rows[count]['status'],
                                 items: items,
                             }, )
-                        } else{
+                        } else {
                             console.log(`No items found in ${orderID}`);
                         }
                     } else {
@@ -137,7 +138,7 @@ const getOrderByID = async function (req, res, next) {
                 }
                 res.send({
                     done: true,
-                    message: "Done",
+                    message: "Data not found.",
                     data: orders
                 });
             } else {
@@ -165,7 +166,7 @@ const getOrderByID = async function (req, res, next) {
 }
 const getOrdersByUserID = async function (req, res, next) {
     const userId = req.userVerify._id.user_id;
-    
+
     var orders = [];
     // const userId = req.userVerify._id;
     const responseOrder = await pool.query("SELECT * FROM orders WHERE user_id= $1 order by order_count desc", [userId]);
@@ -203,8 +204,8 @@ const getOrdersByUserID = async function (req, res, next) {
                                 status: responseOrder.rows[count]['status'],
                                 items: items,
                             }, )
-                        }else{
-                           
+                        } else {
+
                             console.log(`No items found in ${orderID}`);
                         }
                     } else {
@@ -217,7 +218,7 @@ const getOrdersByUserID = async function (req, res, next) {
                 }
                 res.json({
                     done: true,
-                    message: "Done",
+                    message: "Data not found.",
                     data: orders
                 });
             } else {
@@ -302,7 +303,7 @@ const putOrder = async function (req, res, next) {
     // const userMobile = req.mobileToken._mobile_no;
     const orderId = req.params.or_id;
     var status = req.body.status;
-    const response = await pool.query("UPDATE orders SET status=$1 WHERE order_id=$2", [status,orderId]);
+    const response = await pool.query("UPDATE orders SET status=$1 WHERE order_id=$2", [status, orderId]);
     try {
         if (res.status(200)) {
             if (response.rowCount != 0 && response.rowCount != null) {
@@ -330,10 +331,81 @@ const putOrder = async function (req, res, next) {
         });
     }
 }
+
+const putOrderItemsRates=async function (req, res, next) {
+    const rates = req.body.body;
+    const orderID= req.params.order_id;
+   try {
+       var retRes;
+    rates.forEach(async element => {
+        const itemId = element["item_id"];
+     const response = await pool.query("UPDATE ordered_items SET is_rated=$1 WHERE item_id=$2 AND order_id=$3", [true, itemId, orderID]);
+     
+     if (res.status(200)) {
+
+        if (response.rowCount != 0 && response.rowCount != null) {
+            req.body={
+                        "item_id": itemId, 
+                        "value": element["rate"]
+                     };
+            
+                     await  postRate(req, res,next).then((value)=>{
+                        retRes= value;
+                     });
+            
+            // res.json({
+            //     done: true,
+            //     message: "Data Updated successfully",
+            // })
+        } else {
+            console.log(`Data not found to update.`);
+            // res.json({
+            //     done: true,
+            //     message: "Data not found to update.",
+            //     // data: [],
+            // })
+        }
+    } else {
+        res.json({
+            done: false,
+            message: "Has some issue(s) with status, Try again.",
+        })
+    }
+    });
+    if(retRes != null){
+        if(res.status(200)){
+            res.json({
+                   done: true,
+                   message: "Data Inserted successfully",
+               })
+       }else{
+            res.json({
+                   done: false,
+                   message: "Has some issue(s) with status, Try again.",
+               })
+       }
+    }else{
+        res.json({
+               done: false,
+               message: "Has some issue(s) with another, Try again.",
+           })
+   }
+    
+   } catch (error) {
+    res.json({
+        done: false,
+        message: "Has some issue(s) with another, Try again.",
+    });
+   }
+    
+   
+}
+
 module.exports = {
     getOrders,
     getOrdersByUserID,
     getOrderByID,
     postOrder,
-    putOrder
+    putOrder,
+    putOrderItemsRates
 }

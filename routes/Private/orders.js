@@ -9,5 +9,6 @@ router.get('/any/order/:or_id',userVerify, orders_controller.getOrderByID);
 router.get('/user/orders/',userVerify, orders_controller.getOrdersByUserID);
 router.post('/any/order/',userVerify,mobileVerify, orders_controller.postOrder);
 router.put('/any/order/:or_id',userVerify,mobileVerify, orders_controller.putOrder);
+router.put('/any/order/items/rates/:order_id',userVerify,mobileVerify, orders_controller.putOrderItemsRates);
 
 module.exports = router;

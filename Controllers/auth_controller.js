@@ -158,7 +158,7 @@ const userAuth = async function (req, res, next) {
     //the value is get from the verified token requeast 
     const token_data = req.mobileToken;
 
-    const response = await pool.query("SELECT * FROM users WHERE phone_no=$1", [token_data._mobile_no]);
+    const response = await pool.query("SELECT user_name, phone_no,reg_date,user_type FROM users WHERE phone_no=$1", [token_data._mobile_no]);
 
     try {
         if (res.status(200)) {
@@ -216,7 +216,12 @@ const userRegister = async function (req, res, next) {
                 res.json({
                     done: true,
                     message: "Your successfully Registered with Login.",
-                    data: response.rows
+                    data: [{
+                        "user_name": response.rows[0]['user_name'],
+                        "phone_no": response.rows[0]['phone_no'],
+                        "reg_date": response.rows[0]['reg_date'],
+                        "user_type": response.rows[0]['user_type']
+                    }]
                 })
             } else {
                 res.json({
@@ -254,7 +259,12 @@ const userLogin = async function (req, res, next) {
             res.json({
                 done: true,
                 message: "Your successfully Login.",
-                data: response.rows
+                data:  [{
+                    "user_name": response.rows[0]['user_name'],
+                    "phone_no": response.rows[0]['phone_no'],
+                    "reg_date": response.rows[0]['reg_date'],
+                    "user_type": response.rows[0]['user_type']
+                }]
             })
         } else {
             res.json({
