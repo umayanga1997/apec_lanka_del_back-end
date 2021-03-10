@@ -285,7 +285,7 @@ const getOrdersByUserID = async function (req, res, next) {
 }
 const postOrder = async function (req, res, next) {
     const orderID = uuidv4();
-    const userId = req.userVerify._id;
+    const userId = req.userVerify._id.user_id;
     const userMobile = req.mobileToken._mobile_no;
     //format date time
     var date = dateFormat(new Date(), "yyyy-mm-dd h:MM:ss");
@@ -345,9 +345,10 @@ const postOrder = async function (req, res, next) {
             })
         }
     } catch (error) {
+        console.log( "Has some issue(s) with another, Try again." +error,);
         res.json({
             done: false,
-            message: "Has some issue(s) with another, Try again.",
+            message: "Has some issue(s) with another, Try again." +error,
         });
     }
 }

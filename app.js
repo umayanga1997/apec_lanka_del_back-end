@@ -14,6 +14,8 @@ const profileRoute = require('./routes/Private/userProfile');
 const orderRoute = require('./routes/Private/orders');
 const itemRateRoute = require('./routes/Public/item_rate');
 
+const indexView = require('./routes/index');
+
 dotenv.config();
 
 // view engine setup
@@ -35,6 +37,8 @@ app.use('/api/v1/user/', authRoute);
 app.use('/api/v1/user/', profileRoute);
 app.use('/api/v1/details/',orderRoute);
 
+//Viewers
+app.use('/',indexView);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -53,3 +57,6 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
+// app.listen("3000",() =>{
+
+// });
