@@ -6,6 +6,7 @@
     "start": "nodemon ./bin/www"
   },
   "dependencies": {
+    "algoliasearch": "^4.8.6",
     "axios": "^0.21.1",
     "cookie-parser": "~1.4.4",
     "dateformat": "^4.5.1",

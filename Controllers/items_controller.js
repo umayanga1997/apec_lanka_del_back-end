@@ -4,6 +4,7 @@ const {
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const rateControle = require('../Controllers/item_rate_controller');
+const algoliaController = require('../Controllers/algolia');
 
 const getItems = async function (req, res, next) {
     const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate from items full outer join  item_rates ir on items.item_id = ir.item_id group by items.item_count");
@@ -11,6 +12,7 @@ const getItems = async function (req, res, next) {
     try {
         if (res.status(200)) {
             if (response.rowCount != 0 && response.rowCount != null) {
+                await algoliaController.pushItemsToAlgolia("all_Cities");
                 res.json({
                     done: true,
                     message: "Done",
@@ -47,6 +49,7 @@ const getItemByItemID = async function (req, res, next) {
     try {
         if (res.status(200)) {
             if (response.rowCount != 0 && response.rowCount != null) {
+                await algoliaController.pushItemsToAlgolia("all_Cities");
                 res.json({
                     done: true,
                     message: "Done",
@@ -77,12 +80,14 @@ const getItemByItemID = async function (req, res, next) {
 }
 
 const getItemBySubCatID = async function (req, res, next) {
+
     const subCatID = req.params.subCatId;
     const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate from items full outer join  item_rates ir on items.item_id = ir.item_id where items.sub_category_id =$1 group by items.item_count;", [subCatID]);
 
     try {
         if (res.status(200)) {
             if (response.rowCount != 0 && response.rowCount != null) {
+                await algoliaController.pushItemsToAlgolia("all_Cities");
                 res.json({
                     done: true,
                     message: "Done",
@@ -111,7 +116,7 @@ const getItemBySubCatID = async function (req, res, next) {
         });
     }
 }
-const  getItemBySubCatIDWithCity = async function(req, res, next){
+const getItemBySubCatIDWithCity = async function(req, res, next){
     
     const city = req.params.city;
     const subCatID = req.params.subCatId;
@@ -120,6 +125,7 @@ const  getItemBySubCatIDWithCity = async function(req, res, next){
     try {
         if (res.status(200)) {
             if (response.rowCount != 0 && response.rowCount != null) {
+                await algoliaController.pushItemsToAlgolia(city);
                 res.json({
                     done: true,
                     message: "Done",
