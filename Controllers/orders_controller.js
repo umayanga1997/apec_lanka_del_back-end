@@ -8,6 +8,7 @@ var dateFormat = require("dateformat");
 const {
     postRate
 } = require('./item_rate_controller');
+const date = require('date-and-time');
 
 const getOrders = async function (req, res, next) {
     var orders = [];
@@ -288,7 +289,8 @@ const postOrder = async function (req, res, next) {
     const userId = req.userVerify._id.user_id;
     const userMobile = req.mobileToken._mobile_no;
     //format date time
-    var date = dateFormat(new Date(), "yyyy-mm-dd h:MM:ss");
+    var datePlaced = dateFormat(new Date(), "yyyy-mm-dd h:MM:ss");
+    var city = req.body.city;
     var paymentMethod = req.body.payment_method;
     var lat = req.body.delivery_address_lat;
     var lng = req.body.delivery_address_lng;
@@ -303,54 +305,106 @@ const postOrder = async function (req, res, next) {
     var scheduleDate = req.body.schedule_date;
     var status = req.body.status;
     var items = req.body.items;
-    const responseOrder = await pool.query("INSERT INTO orders(order_id, user_id, user_mobile_no, payment_method, delivery_address_lat, delivery_address_lng, delivery_address, sub_total, delivery_fee, conv_fee, service_charge, net_total, order_placed_date_time, schedule_date, status, discount)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
-        [orderID, userId, userMobile, paymentMethod, lat, lng, address_txt, subTotal, deliveryFee, convFee, serviceCharge, netTotal, date, scheduleDate, status, discount]);
-    try {
-        if (res.status(200)) {
-            if (responseOrder.rowCount != 0 && responseOrder.rowCount != null) {
-                var responseItems;
-                for (var count in items) {
-                    responseItems = await pool.query("INSERT INTO ordered_items(item_id, item_name, unit_qty, unit, price_buy, price_sale, price_sale_with_discount, ordered_qty, partner_id, partner_name, image_url, order_id)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
-                        [items[count].item_id, items[count].item_name, items[count].unit_qty, items[count].unit, items[count].price_buy, items[count].price_sale, items[count].price_sale_with_discount, items[count].ordered_qty, items[count].partner_id, items[count].partner_name, items[count].image_url, orderID]);
-                };
-                if(responseItems.rowCount != 0 && responseItems.rowCount != null){
-                    if (res.status(200)) {
-                        res.json({
-                            done: true,
-                            message: "Order Placed successfully",
-                        })
+
+    const promise = new Promise(async (resolve, reject) => {
+        for (const count in items) {
+
+            const responceOfPartnerStatus = await pool.query("SELECT * FROM partners WHERE partner_id=$1", [items[count].partner_id]);
+            if (res.status(200)) {
+                if (responceOfPartnerStatus.rowCount != 0 && responceOfPartnerStatus.rowCount != null) {
+                    if (!responceOfPartnerStatus.rows[0].status) {
+                        reject({
+                            done: false,
+                            message: `${items[count].partner_name} Shop is offline, We can't deliver items from this shop now.`,
+                        });
+                    } else {
+                        const locationStatus = await pool.query("SELECT * FROM partners_locations WHERE city=$1", [city]);
+
+                        if (res.status(200)) {
+                            if (locationStatus.rowCount == 0 || locationStatus.rowCount == null) {
+                                reject({
+                                    done: false,
+                                    message: `${items[count].partner_name} Shop is not supported in this city, We can't deliver items from this shop.`,
+                                });
+                            }
+                        } else {
+                            reject({
+                                done: false,
+                                message: "Has some issue(s) with status, Try again.",
+                            });
+                        }
+                    }
+
+                } else {
+                    reject({
+                        done: false,
+                        message: "Data not found.",
+                    });
+                }
+            } else {
+                reject({
+                    done: false,
+                    message: "Has some issue(s) with status, Try again.",
+                });
+            }
+        }
+        resolve("All Done");
+    });
+
+    await promise.then(async (result) => {
+
+        const responseOrder = await pool.query("INSERT INTO orders(order_id, user_id, user_mobile_no, payment_method, delivery_address_lat, delivery_address_lng, delivery_address, sub_total, delivery_fee, conv_fee, service_charge, net_total, order_placed_date_time, schedule_date, status, discount)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
+            [orderID, userId, userMobile, paymentMethod, lat, lng, address_txt, subTotal, deliveryFee, convFee, serviceCharge, netTotal, datePlaced, scheduleDate, status, discount]);
+        try {
+            if (res.status(200)) {
+                if (responseOrder.rowCount != 0 && responseOrder.rowCount != null) {
+                    var responseItems;
+                    for (var count in items) {
+                        responseItems = await pool.query("INSERT INTO ordered_items(item_id, item_name, unit_qty, unit, price_buy, price_sale, price_sale_with_discount, ordered_qty, partner_id, partner_name, image_url, order_id)VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+                            [items[count].item_id, items[count].item_name, items[count].unit_qty, items[count].unit, items[count].price_buy, items[count].price_sale, items[count].price_sale_with_discount, items[count].ordered_qty, items[count].partner_id, items[count].partner_name, items[count].image_url, orderID]);
+                    };
+                    if (responseItems.rowCount != 0 && responseItems.rowCount != null) {
+                        if (res.status(200)) {
+                            res.json({
+                                done: true,
+                                message: "Order Placed successfully",
+                            })
+                        } else {
+                            res.json({
+                                done: false,
+                                message: "Has some issue(s) with status, Try again.",
+                            })
+                        }
                     } else {
                         res.json({
                             done: false,
-                            message: "Has some issue(s) with status, Try again.",
+                            message: "Order Placed unsuccessfully",
                         })
                     }
-                }else{
+                } else {
                     res.json({
                         done: false,
-                        message: "Order Placed unsuccessfully",
+                        message: "Data not found to post.",
                     })
                 }
+
             } else {
                 res.json({
                     done: false,
-                    message: "Data not found to post.",
+                    message: "Has some issue(s) with status, Try again.",
                 })
             }
-
-        } else {
+        } catch (error) {
+            console.log("Has some issue(s) with another, Try again." + error, );
             res.json({
                 done: false,
-                message: "Has some issue(s) with status, Try again.",
-            })
+                message: "Has some issue(s) with another, Try again." + error,
+            });
         }
-    } catch (error) {
-        console.log( "Has some issue(s) with another, Try again." +error,);
-        res.json({
-            done: false,
-            message: "Has some issue(s) with another, Try again." +error,
-        });
-    }
+    }).catch((error) => {
+        res.json(error)
+    });
+
 }
 const putOrder = async function (req, res, next) {
     // const userId = req.userVerify._id;

@@ -165,7 +165,7 @@ const userAuth = async function (req, res, next) {
             if (response.rowCount != 0 && response.rowCount != null) {
                 res.json({
                     done: true,
-                    message: "Registered",
+                    message: "Registered Account",
                     data: {
                         registered: true,
                     },
@@ -173,7 +173,7 @@ const userAuth = async function (req, res, next) {
             } else {
                 res.json({
                     done: true,
-                    message: "Not-Register",
+                    message: "Non-Registered Account",
                     data: {
                         registered: false,
                     },
