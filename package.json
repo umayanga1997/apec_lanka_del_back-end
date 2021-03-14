@@ -1,11 +1,10 @@
 {
-
+  
   "name": "apec.lk-delivery-backend",
   "version": "0.0.0",
   "private": true,
-  "main": "./bin/www.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon ./bin/www"
   },
   "dependencies": {
     "algoliasearch": "^4.8.6",
