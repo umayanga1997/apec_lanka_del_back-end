@@ -7,44 +7,39 @@ const rateControle = require('../Controllers/item_rate_controller');
 const algoliaController = require('../Controllers/algolia');
 
 const getItems = async function (req, res, next) {
-              res.json({
+    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate from items full outer join  item_rates ir on items.item_id = ir.item_id group by items.item_count");
+   
+    try {
+        if (res.status(200)) {
+            if (response.rowCount != 0 && response.rowCount != null) {
+                await algoliaController.pushItemsToAlgolia("all_Cities");
+                res.json({
+                    done: true,
+                    message: "Done",
+                    data: response.rows,
+                })
+            } else {
+                res.json({
+                    done: true,
+                    message: "Data not found.",
+                    data: [],
+                })
+            }
+
+        } else {
+            res.json({
                 done: false,
                 message: "Has some issue(s) with status, Try again.",
                 data: []
             })
-    // const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate from items full outer join  item_rates ir on items.item_id = ir.item_id group by items.item_count");
-   
-    // try {
-    //     if (res.status(200)) {
-    //         if (response.rowCount != 0 && response.rowCount != null) {
-    //             await algoliaController.pushItemsToAlgolia("all_Cities");
-    //             res.json({
-    //                 done: true,
-    //                 message: "Done",
-    //                 data: response.rows,
-    //             })
-    //         } else {
-    //             res.json({
-    //                 done: true,
-    //                 message: "Data not found.",
-    //                 data: [],
-    //             })
-    //         }
-
-    //     } else {
-    //         res.json({
-    //             done: false,
-    //             message: "Has some issue(s) with status, Try again.",
-    //             data: []
-    //         })
-    //     }
-    // } catch (error) {
-    //     res.json({
-    //         done: false,
-    //         message: "Has some issue(s) with another, Try again.",
-    //         data: [],
-    //     });
-    // }
+        }
+    } catch (error) {
+        res.json({
+            done: false,
+            message: "Has some issue(s) with another, Try again.",
+            data: [],
+        });
+    }
 }
 
 const getItemByItemID = async function (req, res, next) {
