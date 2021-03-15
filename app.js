@@ -14,7 +14,7 @@ const profileRoute = require('./routes/Private/userProfile');
 const orderRoute = require('./routes/Private/orders');
 const itemRateRoute = require('./routes/Public/item_rate');
 
-const indexView = require('./routes/index');
+// const indexView = require('./routes/index');
 
 dotenv.config();
 
@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-//my middlewares
+// //my middlewares
 app.use('/',categoriesRoute);
 app.use('/', itemsRoute);
 app.use('/', subCategoriesRoute);
@@ -38,7 +38,7 @@ app.use('/', profileRoute);
 app.use('/',orderRoute);
 
 //Viewers
-app.use('/',indexView);
+// app.use('/',indexView);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
