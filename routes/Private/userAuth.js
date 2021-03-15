@@ -5,12 +5,12 @@ const auth_controller = require('../../Controllers/auth_controller');
 const mobileVerify = require('../../Controllers/Tokens/userMobileVerifyToken');
 
 //mobile number verifycation (firstly send otp and after otp verifycation)
-router.get('/auth/mob/:mobile_no', auth_controller.userMobileOTP);
-router.post('/auth/verify/otp/', auth_controller.otpVerification);
+router.get('/api/v1/user/auth/mob/:mobile_no', auth_controller.userMobileOTP);
+router.post('/api/v1/user/auth/verify/otp/', auth_controller.otpVerification);
 //check is user registered or not
-router.get('/auth/check/',mobileVerify, auth_controller.userAuth);
+router.get('/api/v1/user/auth/check/',mobileVerify, auth_controller.userAuth);
 //reg or login api
-router.post('/register/',mobileVerify, auth_controller.userRegister);
-router.post('/login/', mobileVerify, auth_controller.userLogin);
+router.post('/api/v1/user/register/',mobileVerify, auth_controller.userRegister);
+router.post('/api/v1/user/login/', mobileVerify, auth_controller.userLogin);
 
 module.exports = router;
