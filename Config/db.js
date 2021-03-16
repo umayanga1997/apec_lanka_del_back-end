@@ -1,6 +1,6 @@
 const dotenv = require('dotenv');
 const {Pool} = require('pg');
-// var fs = require('fs');
+var fs = require('fs');
 
 dotenv.config();
 
