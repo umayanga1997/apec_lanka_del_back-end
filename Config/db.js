@@ -1,6 +1,6 @@
 const dotenv = require('dotenv');
 const {Pool} = require('pg');
-var fs = require('fs');
+// var fs = require('fs');
 
 dotenv.config();
 
@@ -11,9 +11,9 @@ const pool =new Pool({
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
     ssl: {
-//         rejectUnauthorized: false,
-//         ca: process.env.DB_CA,
-        ca: fs.readFileSync(__dirname +'/ca-certificate.crt'),
+        rejectUnauthorized: false,
+        ca: process.env.DB_CA,
+//         ca: fs.readFileSync(__dirname +'/ca-certificate.crt'),
     }
 });
 
