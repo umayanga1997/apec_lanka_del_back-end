@@ -29,13 +29,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // //my middlewares
-app.use('/',categoriesRoute);
-app.use('/', itemsRoute);
-app.use('/', subCategoriesRoute);
-app.use('/',itemRateRoute);
-app.use('/', authRoute);
-app.use('/', profileRoute);
-app.use('/',orderRoute);
+app.use('/del/',categoriesRoute);
+app.use('/del/', itemsRoute);
+app.use('/del/', subCategoriesRoute);
+app.use('/del/',itemRateRoute);
+app.use('/del/', authRoute);
+app.use('/del/', profileRoute);
+app.use('/del/',orderRoute);
 
 //Viewers
 // app.use('/',indexView);
