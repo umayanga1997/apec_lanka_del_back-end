@@ -128,9 +128,42 @@ const putSubCategory = async function (req, res, next) {
     }
 }
 
+const deleteSubCategory =async function (req, res, next) {
+    var subCatId = req.params.sub_cat_id;
+    
+    const response = await pool.query("DELETE FROM sub_categories WHERE sub_cat_id=$1", [subCatId]);
+    try {
+        if (res.status(200)) {
+            if (response.rowCount != 0 && response.rowCount != null) {
+                res.json({
+                    done: true,
+                    message: "Data Deleted successfully",
+                })
+            } else {
+                res.json({
+                    done: true,
+                    message: "Data not found to delete.",
+                    data: [],
+                })
+            }
+        } else {
+            res.json({
+                done: false,
+                message: "Has some issue(s) with status, Try again.",
+            })
+        }
+    } catch (error) {
+        res.json({
+            done: false,
+            message: "Has some issue(s) with another, Try again.",
+        });
+    }
+}
+
 module.exports={
     getSubCategories,
     getSubCategory,
     postSubCategory,
     putSubCategory,
+    deleteSubCategory,
 }

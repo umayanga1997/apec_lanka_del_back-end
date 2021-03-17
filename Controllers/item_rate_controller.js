@@ -66,7 +66,40 @@ const postRate = async function (req, res, next) {
     }
     
 }
+
+const deleteRate =async function (req, res, next) {
+    var itemId = req.body.item_id;
+    var rateCountNo = req.body.rate_count_no;
+    const response = await pool.query("DELETE FROM item_rates WHERE item_id=$1 AND rate_count_no=$2", [itemId, rateCountNo]);
+    try {
+        if (res.status(200)) {
+            if (response.rowCount != 0 && response.rowCount != null) {
+                res.json({
+                    done: true,
+                    message: "Data Deleted successfully",
+                })
+            } else {
+                res.json({
+                    done: true,
+                    message: "Data not found to delete.",
+                    // data: [],
+                })
+            }
+        } else {
+            res.json({
+                done: false,
+                message: "Has some issue(s) with status, Try again.",
+            })
+        }
+    } catch (error) {
+        res.json({
+            done: false,
+            message: "Has some issue(s) with another, Try again.",
+        });
+    }
+}
 module.exports = {
     getRate,
-    postRate
+    postRate,
+    deleteRate,
 }

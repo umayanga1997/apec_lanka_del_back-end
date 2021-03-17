@@ -130,9 +130,41 @@ const putCategory =async function (req, res, next) {
     
 }
 
+const deleteCategory =async function (req, res, next) {
+    var catId = req.params.cat_id;
+    const response = await pool.query("DELETE FROM categories WHERE cat_id=$1", [catId]);
+    try {
+        if (res.status(200)) {
+            if (response.rowCount != 0 && response.rowCount != null) {
+                res.json({
+                    done: true,
+                    message: "Data Deleted successfully",
+                })
+            } else {
+                res.json({
+                    done: true,
+                    message: "Data not found to delete.",
+                    // data: [],
+                })
+            }
+        } else {
+            res.json({
+                done: false,
+                message: "Has some issue(s) with status, Try again.",
+            })
+        }
+    } catch (error) {
+        res.json({
+            done: false,
+            message: "Has some issue(s) with another, Try again.",
+        });
+    }
+}
+
 module.exports = {
     getCategory,
     getCategories,
     postCategory,
-    putCategory
+    putCategory,
+    deleteCategory
 }

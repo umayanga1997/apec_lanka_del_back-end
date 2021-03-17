@@ -271,6 +271,41 @@ const putItem = async function (req, res, next) {
         });
     }
 }
+
+
+const deleteItem =async function (req, res, next) {
+    const itemId = req.params.item_id;
+
+    const response = await pool.query("DELETE FROM items WHERE item_id=$1",
+        [itemId]);
+
+    try {
+        if (res.status(200)) {
+            if (response.rowCount != 0 && response.rowCount != null) {
+                res.json({
+                    done: true,
+                    message: "Data Deleted successfully",
+                })
+            } else {
+                res.json({
+                    done: true,
+                    message: "Data not found to delete.",
+                   
+                })
+            }
+        } else {
+            res.json({
+                done: false,
+                message: "Has some issue(s) with status, Try again.",
+            })
+        }
+    } catch (error) {
+        res.json({
+            done: false,
+            message: "Has some issue(s) with another, Try again.",
+        });
+    }
+}
 module.exports = {
     getItems,
     getItemByItemID,
@@ -279,4 +314,5 @@ module.exports = {
     getItemsByCity,
     postItem,
     putItem,
+    deleteItem,
 }

@@ -5,14 +5,22 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const dotenv = require('dotenv');
 const app = express();
-//my routes
+
+//MY ROUTES
+//Public Routes
 const categoriesRoute = require('./routes/Public/categories');
 const subCategoriesRoute = require('./routes/Public/sub_categories');
 const itemsRoute = require('./routes/Public/items');
+const itemRateRoute = require('./routes/Public/item_rate');
+
+//Private Routes
 const authRoute = require('./routes/Private/userAuth');
 const profileRoute = require('./routes/Private/userProfile');
 const orderRoute = require('./routes/Private/orders');
-const itemRateRoute = require('./routes/Public/item_rate');
+const categoriesRoutePrivate = require('./routes/Private/categories');
+const subCategoriesRoutePrivate = require('./routes/Private/sub_categories');
+const itemsRoutePrivate = require('./routes/Private/items');
+const itemRateRoutePrivate = require('./routes/Private/item_rate');
 
 // const indexView = require('./routes/index');
 
@@ -28,11 +36,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, 'public')));
 
-// //my middlewares
+//MY MIDDLEWARES
+//Public Middlewares
 app.use('/del/',categoriesRoute);
 app.use('/del/', itemsRoute);
 app.use('/del/', subCategoriesRoute);
 app.use('/del/',itemRateRoute);
+//Private Middlewares
+app.use('/del/',categoriesRoutePrivate);
+app.use('/del/', itemsRoutePrivate);
+app.use('/del/', subCategoriesRoutePrivate);
+app.use('/del/',itemRateRoutePrivate);
 app.use('/del/', authRoute);
 app.use('/del/', profileRoute);
 app.use('/del/',orderRoute);
