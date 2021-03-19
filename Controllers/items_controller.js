@@ -7,7 +7,7 @@ const rateControle = require('../Controllers/item_rate_controller');
 const algoliaController = require('../Controllers/algolia');
 
 const getItems = async function (req, res, next) {
-    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(item.rates.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id group by items.item_count");
+    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(ir.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id group by items.item_count");
    
     try {
         if (res.status(200)) {
@@ -44,7 +44,7 @@ const getItems = async function (req, res, next) {
 
 const getItemByItemID = async function (req, res, next) {
     const itemId = req.params.item_id;
-    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(item.rates.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.item_id=$1 group by items.item_count;", [itemId]);
+    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(ir.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.item_id=$1 group by items.item_count;", [itemId]);
 
     try {
         if (res.status(200)) {
@@ -82,7 +82,7 @@ const getItemByItemID = async function (req, res, next) {
 const getItemBySubCatID = async function (req, res, next) {
 
     const subCatID = req.params.subCatId;
-    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(item.rates.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.sub_category_id =$1 group by items.item_count;", [subCatID]);
+    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(ir.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.sub_category_id =$1 group by items.item_count;", [subCatID]);
 
     try {
         if (res.status(200)) {
@@ -120,7 +120,7 @@ const getItemBySubCatIDWithCity = async function(req, res, next){
     
     const city = req.params.city;
     const subCatID = req.params.subCatId;
-    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(item.rates.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.sub_category_id =$1 and items.partner_id in (select partner_id from partners_locations where city=$2) group by items.item_count;", [subCatID, city]);
+    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(ir.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.sub_category_id =$1 and items.partner_id in (select partner_id from partners_locations where city=$2) group by items.item_count;", [subCatID, city]);
 
     try {
         if (res.status(200)) {
@@ -156,7 +156,7 @@ const getItemBySubCatIDWithCity = async function(req, res, next){
 } 
 const getItemsByCity =async  function(req, res, next){
     const city = req.params.city;
-    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(item.rates.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.partner_id in (select partner_id from partners_locations where city=$2) group by items.item_count;", [city]);
+    const response = await pool.query("select  items.* , CAST(avg(CASE when ir.rate_value != 0 then  ir.rate_value else 0 end) as decimal(2,1)) as rate, COUNT(ir.*) as review_count from items full outer join  item_rates ir on items.item_id = ir.item_id where items.partner_id in (select partner_id from partners_locations where city=$2) group by items.item_count;", [city]);
 
     try {
         if (res.status(200)) {
