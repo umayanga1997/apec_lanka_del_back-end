@@ -75,7 +75,7 @@ const putUserProfileDetails =async function (req,res, next) {
     const userId = req.userVerify._id.user_id;
     const user_name = req.body.user_name;
     const mobileNo = req.body.mobile_no;
-    var response = res;
+    var response;
     if(mobileNo !=null){
         response = await pool.query("UPDATE users SET user_name=$1, phone_no=$2 WHERE user_id=$3", [user_name,mobileNo, userId]);
     }else{

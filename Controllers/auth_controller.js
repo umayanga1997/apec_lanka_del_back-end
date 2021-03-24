@@ -203,33 +203,41 @@ const userRegister = async function (req, res, next) {
     //format date time
     var date = dateFormat(new Date(), "yyyy-mm-dd h:MM:ss");
 
-    const response = await pool.query("INSERT INTO users(user_id, user_name, phone_no, reg_date)VALUES($1,$2,$3,$4)", [uuidv4(), userName, token_data._mobile_no, date]);
     try {
+        const responseReg = await pool.query("INSERT INTO users(user_id, user_name, phone_no, reg_date)VALUES($1,$2,$3,$4)", [uuidv4(), userName, token_data._mobile_no, date]);
+        
         if (res.status(200)) {
-            const response = await pool.query("SELECT * FROM users WHERE phone_no=$1", [token_data._mobile_no]);
-            //create and assign a token
-            const token = jwt.sign({
-                _id: response.rows[0],
-            }, process.env.TOKEN_SECRET, );
-            res.header("auth-token", token);
-            if (res.status(200)) {
-                res.json({
-                    done: true,
-                    message: "Your successfully Registered with Login.",
-                    data: [{
-                        "user_name": response.rows[0]['user_name'],
-                        "phone_no": response.rows[0]['phone_no'],
-                        "reg_date": response.rows[0]['reg_date'],
-                        "user_type": response.rows[0]['user_type']
-                    }]
-                })
+            if (responseReg.rowCount != 0 && responseReg.rowCount != null) {
+                const response = await pool.query("SELECT * FROM users WHERE phone_no=$1", [token_data._mobile_no]);
+                //create and assign a token
+                const token = jwt.sign({
+                    _id: response.rows[0],
+                }, process.env.TOKEN_SECRET, );
+                res.header("auth-token", token);
+                if (res.status(200)) {
+                    res.json({
+                        done: true,
+                        message: "Your successfully Registered with Login.",
+                        data: [{
+                            "user_name": response.rows[0]['user_name'],
+                            "phone_no": response.rows[0]['phone_no'],
+                            "reg_date": response.rows[0]['reg_date'],
+                            "user_type": response.rows[0]['user_type']
+                        }]
+                    })
+                } else {
+                    res.json({
+                        done: false,
+                        message: "Has some issue(s) with status, Try again.",
+                    })
+                }
             } else {
                 res.json({
-                    done: false,
-                    message: "Has some issue(s) with status, Try again.",
+                    done: true,
+                    message: "Something went wrong, Can't register your account, Please try again.",
+                    data: []
                 })
             }
-
         } else {
             res.json({
                 done: false,
@@ -259,7 +267,7 @@ const userLogin = async function (req, res, next) {
             res.json({
                 done: true,
                 message: "Your successfully Login.",
-                data:  [{
+                data: [{
                     "user_name": response.rows[0]['user_name'],
                     "phone_no": response.rows[0]['phone_no'],
                     "reg_date": response.rows[0]['reg_date'],
